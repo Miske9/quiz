@@ -1,0 +1,24 @@
+services:
+
+  quiz-service:
+    build: ./services/quiz-service
+    container_name: quiz-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - quiz-db
+
+  quiz-db:
+    image: postgres:16
+    container_name: quiz-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: user1234
+      POSTGRES_DB: quiz_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - quiz_data:/var/lib/postgresql/data
+
+volumes:
+  quiz_data:
