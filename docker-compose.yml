@@ -53,6 +53,35 @@ services:
       timeout: 5s
       retries: 5
 
+
+  score-service:
+    build: ./services/score-service
+    container_name: score-service
+    ports:
+      - "8002:8002"
+    depends_on:
+      score-db:
+        condition: service_healthy
+
+  score-db:
+    image: postgres:16
+    container_name: score-db
+    environment:
+      POSTGRES_USER: score_user
+      POSTGRES_PASSWORD: user1234
+      POSTGRES_DB: score_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - score_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U score_user -d score_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
 volumes:
   quiz_data:
   player_data:
+  score_data:
