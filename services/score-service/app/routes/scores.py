@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+import httpx
 
 from ..database import get_db
 from ..models import Score
@@ -33,3 +34,32 @@ def get_scores(db: Session = Depends(get_db)):
     return db.query(Score).order_by(
         Score.points.desc()
     ).all()
+    
+
+@router.get("/leaderboard")
+def get_leaderboard(db: Session = Depends(get_db)):
+    scores = db.query(Score).order_by(
+        Score.points.desc()
+    ).all()
+
+    leaderboard = []
+
+    for score in scores:
+        try:
+            response = httpx.get(
+                f"http://player-service:8001/players/{score.player_id}"
+            )
+
+            if response.status_code == 200:
+                player = response.json()
+
+                leaderboard.append({
+                    "player_id": score.player_id,
+                    "username": player["username"],
+                    "points": score.points
+                })
+
+        except Exception:
+            continue
+
+    return leaderboard
