@@ -14,6 +14,13 @@ class AnswerSubmit(BaseModel):
     player_id: int
     answer_id: int
 
+class PlayerCreate(BaseModel):
+    username: str
+
+class ScoreCreate(BaseModel):
+    player_id: int
+    points: int
+
 @app.get("/")
 def root():
     return {
@@ -43,6 +50,47 @@ def get_questions():
         )
         
 
+@app.post("/questions/{question_id}/answer") 
+def submit_answer(
+  question_id: int,
+  answer_data: AnswerSubmit
+  ):
+    try:
+        response = httpx.post(
+          f"{QUIZ_SERVICE_URL}/questions/{question_id}/answer",
+          json=answer_data.model_dump()
+          )
+        if response.status_code != 200:
+          raise HTTPException(
+            status_code=response.status_code,
+            detail="Quiz service error"
+            ) 
+        return response.json()
+    except httpx.RequestError:
+      raise HTTPException(
+        status_code=503,
+        detail="Quiz service unavailable"
+        )
+
+
+@app.get("/players")
+def get_players():
+    try:
+        response = httpx.get(
+          f"{PLAYER_SERVICE_URL}/players/"
+          )
+        if response.status_code != 200:
+          raise HTTPException(
+            status_code=response.status_code,
+            detail="Player service error"
+            )
+        return response.json()
+    except httpx.RequestError:
+      raise HTTPException(
+        status_code=503,
+        detail="Player service unavailable"
+        )
+
 @app.get("/players/{player_id}")
 def get_player(player_id: int):
     try:
@@ -65,6 +113,25 @@ def get_player(player_id: int):
         )
         
 
+@app.post("/players")
+def create_player(player_data: PlayerCreate):
+    try:
+        response = httpx.post(
+            f"{PLAYER_SERVICE_URL}/players/",
+            json=player_data.model_dump()
+        )
+        if response.status_code != 200:
+          raise HTTPException(
+            status_code=response.status_code,
+            detail="Player service error"
+            )
+        return response.json()
+    except httpx.RequestError:
+      raise HTTPException(
+        status_code=503,
+        detail="Player service unavailable"
+        )
+
 @app.get("/leaderboard")
 def get_leaderboard():
     try:
@@ -86,21 +153,17 @@ def get_leaderboard():
             detail="Score service unavailable"
         )
         
-@app.post("/questions/{question_id}/answer")
-def submit_answer(
-    question_id: int,
-    answer_data: AnswerSubmit
-):
+@app.get("/scores")
+def get_scores():
     try:
-        response = httpx.post(
-            f"{QUIZ_SERVICE_URL}/questions/{question_id}/answer",
-            json=answer_data.model_dump()
+        response = httpx.get(
+            f"{SCORE_SERVICE_URL}/scores/"
         )
 
         if response.status_code != 200:
             raise HTTPException(
                 status_code=response.status_code,
-                detail="Quiz service error"
+                detail="Score service error"
             )
 
         return response.json()
@@ -108,5 +171,28 @@ def submit_answer(
     except httpx.RequestError:
         raise HTTPException(
             status_code=503,
-            detail="Quiz service unavailable"
+            detail="Score service unavailable"
+        )
+
+
+@app.post("/scores")
+def create_score(score_data: ScoreCreate):
+    try:
+        response = httpx.post(
+            f"{SCORE_SERVICE_URL}/scores/",
+            json=score_data.model_dump()
+        )
+
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail="Score service error"
+            )
+
+        return response.json()
+
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=503,
+            detail="Score service unavailable"
         )
