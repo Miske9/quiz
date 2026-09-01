@@ -1,7 +1,8 @@
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Question, Answer
+from ..models import *
 from ..schemas import *
 
 router = APIRouter(
@@ -68,6 +69,96 @@ def create_question(
 
     return question
 
+
+@router.post("/{question_id}/answer", response_model=AnswerResult)
+def submit_answer(
+    question_id: int,
+    answer_data: AnswerSubmit,
+    db: Session = Depends(get_db)
+):
+    question = db.query(Question).filter(
+        Question.id == question_id
+    ).first()
+
+    if not question:
+        raise HTTPException(
+            status_code=404,
+            detail="Question not found"
+        )
+
+    existing_answer = db.query(PlayerAnswer).filter(
+        PlayerAnswer.player_id == answer_data.player_id,
+        PlayerAnswer.question_id == question_id
+    ).first()
+
+    if existing_answer:
+        correct_answer = next(
+            answer for answer in question.answers
+            if answer.is_correct
+        )
+
+        return {
+            "correct": existing_answer.is_correct,
+            "correct_answer": correct_answer.answer,
+            "points": 0
+        }
+
+    answer = db.query(Answer).filter(
+        Answer.id == answer_data.answer_id,
+        Answer.question_id == question_id
+    ).first()
+
+    if not answer:
+        raise HTTPException(
+            status_code=404,
+            detail="Answer not found"
+        )
+
+    correct_answer = next(
+        answer for answer in question.answers
+        if answer.is_correct
+    )
+
+    if answer.is_correct:
+        correct = True
+        points = 1
+    else:
+        correct = False
+        points = 0
+
+    player_answer = PlayerAnswer(
+        player_id=answer_data.player_id,
+        question_id=question_id,
+        answer_id=answer_data.answer_id,
+        is_correct=correct
+    )
+
+    db.add(player_answer)
+    db.commit()
+
+    try:
+        response = httpx.post(
+            "http://score-service:8002/scores/",
+            json={
+                "player_id": answer_data.player_id,
+                "points": points
+            },
+            timeout=5.0
+        )
+
+        response.raise_for_status()
+
+    except httpx.HTTPError:
+        raise HTTPException(
+            status_code=503,
+            detail="Score service unavailable"
+        )
+
+    return {
+        "correct": correct,
+        "correct_answer": correct_answer.answer,
+        "points": points
+    }
   
 @router.put("/{question_id}", response_model=QuestionResponse)
 def update_question(

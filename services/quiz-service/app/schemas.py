@@ -24,3 +24,13 @@ class QuestionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+        
+
+class AnswerSubmit(BaseModel):
+    player_id: int
+    answer_id: int
+    
+class AnswerResult(BaseModel):
+    correct: bool
+    correct_answer: str
+    points: int

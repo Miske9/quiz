@@ -5,5 +5,5 @@ class Score(Base):
   __tablename__ = "scores"
   
   id = Column (Integer, primary_key=True, index=True)
-  player_id = Column (Integer, nullable=False)
+  player_id = Column (Integer, nullable=False, unique=True, index=True)
   points = Column (Integer, nullable=False)

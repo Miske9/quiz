@@ -17,12 +17,19 @@ def create_score(
     score_data: ScoreCreate,
     db: Session = Depends(get_db)
 ):
-    score = Score(
-        player_id=score_data.player_id,
-        points=score_data.points
-    )
+    score = db.query(Score).filter(
+        Score.player_id == score_data.player_id
+    ).first()
 
-    db.add(score)
+    if score:
+        score.points += score_data.points
+    else:
+        score = Score(
+            player_id=score_data.player_id,
+            points=score_data.points
+        )
+        db.add(score)
+
     db.commit()
     db.refresh(score)
 
