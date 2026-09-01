@@ -1,8 +1,16 @@
 services:
 
+  gateway:
+    build: ./gateway
+    ports:
+      - "8080:8000"
+    depends_on:
+      - quiz-service
+      - player-service
+      - score-service
+
   quiz-service:
     build: ./services/quiz-service
-    container_name: quiz-service
     ports:
       - "8000:8000"
     depends_on:
@@ -29,7 +37,6 @@ services:
 
   player-service:
     build: ./services/player-service
-    container_name: player-service
     ports:
       - "8001:8001"
     depends_on:
@@ -56,7 +63,6 @@ services:
 
   score-service:
     build: ./services/score-service
-    container_name: score-service
     ports:
       - "8002:8002"
     depends_on:
