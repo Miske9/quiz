@@ -1,3 +1,5 @@
+import random
+
 from .database import SessionLocal
 from .models import Question, Answer
 
@@ -914,7 +916,10 @@ def seed_database():
                 question=question_data["question"]
             )
 
-            for answer_data in question_data["answers"]:
+            answers = question_data["answers"].copy()
+            random.shuffle(answers)
+
+            for answer_data in answers:
                 answer = Answer(
                     answer=answer_data["answer"],
                     is_correct=answer_data["is_correct"]

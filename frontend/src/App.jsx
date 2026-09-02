@@ -247,7 +247,7 @@ function App() {
     return (
       <div className="app">
         <div className="quiz-card">
-          <h1>Quiz</h1>
+          <h1>Kviz Geografije</h1>
 
           <button
             className="next-button"
@@ -360,9 +360,12 @@ function App() {
           {players.length === 0 ? (
             <p>Nema registriranih igrača.</p>
           ) : (
-            <div className="players">
+            <div className="delete-players">
               {players.map((player) => (
-                <label key={player.id}>
+                <label
+                  key={player.id}
+                  className="delete-player-row"
+                >
                   <input
                     type="checkbox"
                     checked={junkPlayers.includes(player.id)}
@@ -378,14 +381,15 @@ function App() {
                       });
                     }}
                   />
-                  {" "}{player.username}
+
+                  <span>{player.username}</span>
                 </label>
               ))}
             </div>
           )}
 
           <button
-            className="next-button"
+            className="delete-button"
             onClick={async () => {
               if (junkPlayers.length === 0) {
                 return;
@@ -494,7 +498,7 @@ function App() {
 
           <button
             className="next-button"
-            onClick={() => setSelectedPlayer(null)}
+            onClick={() => setScreen("home")}
           >
             Natrag
           </button>
