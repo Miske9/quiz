@@ -49,7 +49,7 @@ function App() {
     return;
   }
 
-  fetch("http://localhost:8080/questions")
+  fetch(`http://localhost:8080/questions?player_id=${player.id}`)
     .then((response) => {
       if (!response.ok) {
         throw new Error();
@@ -202,10 +202,29 @@ function App() {
     return;
   }
 
-  setCurrentQuestion(0);
-  setScore(0);
-  setSelectedAnswer(null);
-  setResult(null);
+  setLoadingQuestions(true);
+
+  try {
+    const response = await fetch(
+      `http://localhost:8080/questions?player_id=${selectedPlayer.id}`
+    );
+
+    if (!response.ok) {
+      throw new Error();
+    }
+
+    const data = await response.json();
+
+    setQuestions(data);
+    setCurrentQuestion(0);
+    setScore(0);
+    setSelectedAnswer(null);
+    setResult(null);
+    setLoadingQuestions(false);
+  } catch {
+    setError("Nije moguće dohvatiti nova pitanja.");
+    setLoadingQuestions(false);
+  }
 };
 
   if (loadingPlayers) {

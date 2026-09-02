@@ -49,10 +49,13 @@ def root():
     }
     
 @app.get("/questions")
-def get_questions():
+def get_questions(player_id: int):
     try:
         response = httpx.get(
-            f"{QUIZ_SERVICE_URL}/questions/"
+            f"{QUIZ_SERVICE_URL}/questions/",
+            params={
+                "player_id": player_id
+            }
         )
 
         if response.status_code != 200:

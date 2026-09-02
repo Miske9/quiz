@@ -1,6 +1,7 @@
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from ..database import get_db
 from ..models import *
 from ..schemas import *
@@ -11,26 +12,49 @@ router = APIRouter(
 )
 
 @router.get("/")
-def get_questions(db: Session = Depends(get_db)):
-  questions = db.query(Question).all()
-  
-  result = []
+def get_questions(
+    player_id: int,
+    db: Session = Depends(get_db)
+):
+    answered_question_ids = db.query(
+        PlayerAnswer.question_id
+    ).filter(
+        PlayerAnswer.player_id == player_id
+    ).all()
 
-  for question in questions:
-      result.append({
-          "id": question.id,
-          "question": question.question,
-          "answers": [
-              {
-                  "id": answer.id,
-                  "answer": answer.answer,
-                  "is_correct": answer.is_correct
-              }
-              for answer in question.answers
-          ]
-      })
+    answered_question_ids = [
+        question_id
+        for (question_id,) in answered_question_ids
+    ]
 
-  return result
+    query = db.query(Question)
+
+    if answered_question_ids:
+        query = query.filter(
+            ~Question.id.in_(answered_question_ids)
+        )
+
+    questions = query.order_by(
+        func.random()
+    ).limit(15).all()
+
+    result = []
+
+    for question in questions:
+        result.append({
+            "id": question.id,
+            "question": question.question,
+            "answers": [
+                {
+                    "id": answer.id,
+                    "answer": answer.answer,
+                    "is_correct": answer.is_correct
+                }
+                for answer in question.answers
+            ]
+        })
+
+    return result
 
 @router.delete("/player/{player_id}/reset")
 def reset_player_answers(
