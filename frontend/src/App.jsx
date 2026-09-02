@@ -5,6 +5,7 @@ function App() {
   const [screen, setScreen] = useState("home");
   const [newPlayerName, setNewPlayerName] = useState("");
   const [junkPlayers, setJunkPlayers] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -126,6 +127,24 @@ function App() {
     }
   };
 
+  const loadLeaderboard = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:8080/scores/leaderboard"
+      );
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
+      const data = await response.json();
+
+      setLeaderboard(data);
+    } catch {
+      setError("Nije moguće dohvatiti ljestvicu.");
+    }
+  };
+  
   const handleAnswer = async (answer) => {
     if (selectedAnswer !== null) {
       return;
@@ -156,13 +175,13 @@ function App() {
         setScore((previousScore) => previousScore + data.points);
       }
     } catch {
-      setResult({
-        correct: false,
-        correct_answer: "",
-        points: 0,
-      });
-    }
-  };
+        setResult({
+          correct: false,
+          correct_answer: "",
+          points: 0,
+        });
+      }
+    };
 
   const nextQuestion = () => {
     setSelectedAnswer(null);
@@ -227,7 +246,10 @@ function App() {
 
           <button
             className="secondary-button"
-            onClick={() => setScreen("leaderboard")}
+            onClick={() => {
+              loadLeaderboard();
+              setScreen("leaderboard");
+            }}
           >
             Ljestvica
           </button>
@@ -394,6 +416,49 @@ function App() {
       </div>
     );
   }
+
+  if (screen === "leaderboard") {
+    return (
+      <div className="app">
+        <div className="quiz-card">
+          <h1>Ljestvica</h1>
+
+          {leaderboard.length === 0 ? (
+            <p>Nema rezultata.</p>
+          ) : (
+            <div className="leaderboard">
+              {leaderboard.map((player, index) => (
+                <div
+                  key={player.player_id}
+                  className="leaderboard-row"
+                >
+                  <span className="leaderboard-rank">
+                    {index + 1}.
+                  </span>
+
+                  <span className="leaderboard-name">
+                    {player.username}
+                  </span>
+
+                  <span className="leaderboard-points">
+                    {player.points} bodova
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button
+            className="secondary-button"
+            onClick={() => setScreen("home")}
+          >
+            Početni ekran
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loadingQuestions) {
     return (
       <div className="app">
@@ -449,6 +514,13 @@ function App() {
             }}
           >
             Promijeni igrača
+          </button>
+
+          <button
+            className="next-button"
+            onClick={() => setScreen("home")}
+          >
+            Početna stranica
           </button>
         </div>
       </div>

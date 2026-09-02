@@ -173,7 +173,7 @@ def create_player(player_data: PlayerCreate):
         detail="Player service unavailable"
         )
 
-@app.get("/leaderboard")
+@app.get("/scores/leaderboard")
 def get_leaderboard():
     try:
         response = httpx.get(

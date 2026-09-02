@@ -163,3 +163,33 @@ body {
   border-radius: 10px;
   font-size: 16px;
 }
+
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  background: white;
+}
+
+.leaderboard-rank {
+  width: 40px;
+  font-weight: bold;
+}
+
+.leaderboard-name {
+  flex: 1;
+  font-weight: bold;
+}
+
+.leaderboard-points {
+  font-weight: bold;
+}
