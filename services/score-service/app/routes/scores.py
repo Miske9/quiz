@@ -85,12 +85,10 @@ def reset_score(
             "message": "Score not found"
         }
 
-    score.points = 0
-
+    db.delete(score)
     db.commit()
 
     return {
         "message": "Score reset successfully",
-        "player_id": player_id,
-        "points": 0
+        "player_id": player_id
     }

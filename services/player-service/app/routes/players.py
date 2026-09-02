@@ -43,3 +43,19 @@ def create_player(
     db.refresh(player)
 
     return player
+
+@router.delete("/")
+def delete_players(
+    player_ids: list[int],
+    db: Session = Depends(get_db)
+):
+    deleted_players = db.query(Player).filter(
+        Player.id.in_(player_ids)
+    ).delete(synchronize_session=False)
+
+    db.commit()
+
+    return {
+        "message": "Players deleted successfully",
+        "deleted_players": deleted_players
+    }

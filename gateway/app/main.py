@@ -34,10 +34,12 @@ class AnswerCreate(BaseModel):
     answer: str
     is_correct: bool
 
-
 class QuestionCreate(BaseModel):
     question: str
     answers: list[AnswerCreate]
+
+class PlayersDelete(BaseModel):
+    player_ids: list[int]
 
 @app.get("/")
 def root():
@@ -264,6 +266,56 @@ def reset_player(player_id: int):
         return {
             "message": "Player reset successfully",
             "player_id": player_id
+        }
+
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=503,
+            detail="Service unavailable"
+        )
+        
+@app.delete("/players")
+def delete_players(data: PlayersDelete):
+    try:
+        player_response = httpx.request(
+            "DELETE",
+            f"{PLAYER_SERVICE_URL}/players/",
+            json=data.player_ids,
+            timeout=5.0
+        )
+
+        if player_response.status_code != 200:
+            raise HTTPException(
+                status_code=player_response.status_code,
+                detail="Player delete error"
+            )
+
+        for player_id in data.player_ids:
+            quiz_response = httpx.delete(
+                f"{QUIZ_SERVICE_URL}/questions/player/{player_id}/reset",
+                timeout=5.0
+            )
+
+            if quiz_response.status_code != 200:
+                raise HTTPException(
+                    status_code=quiz_response.status_code,
+                    detail="Quiz delete error"
+                )
+
+            score_response = httpx.delete(
+                f"{SCORE_SERVICE_URL}/scores/{player_id}",
+                timeout=5.0
+            )
+
+            if score_response.status_code != 200:
+                raise HTTPException(
+                    status_code=score_response.status_code,
+                    detail="Score delete error"
+                )
+
+        return {
+            "message": "Players deleted successfully",
+            "player_ids": data.player_ids
         }
 
     except httpx.RequestError:

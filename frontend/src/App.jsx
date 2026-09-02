@@ -3,6 +3,8 @@ import "./App.css";
 
 function App() {
   const [screen, setScreen] = useState("home");
+  const [newPlayerName, setNewPlayerName] = useState("");
+  const [junkPlayers, setJunkPlayers] = useState([]);
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -87,6 +89,43 @@ function App() {
     }
   };
 
+  const createPlayer = async () => {
+    if (!newPlayerName.trim()) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:8080/players",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: newPlayerName.trim(),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
+      const newPlayer = await response.json();
+
+      setPlayers((previousPlayers) => [
+        ...previousPlayers,
+        newPlayer,
+      ]);
+
+      setNewPlayerName("");
+      setScreen("home");
+    } catch {
+      setError("Nije moguće kreirati igrača.");
+    }
+  };
+
   const handleAnswer = async (answer) => {
     if (selectedAnswer !== null) {
       return;
@@ -167,70 +206,194 @@ function App() {
   }
 
   if (screen === "home") {
-  return (
-    <div className="app">
-      <div className="quiz-card">
-        <h1>Quiz</h1>
+    return (
+      <div className="app">
+        <div className="quiz-card">
+          <h1>Quiz</h1>
 
-        <button
-          className="next-button"
-          onClick={() => setScreen("players")}
-        >
-          Start kviz
-        </button>
+          <button
+            className="next-button"
+            onClick={() => setScreen("players")}
+          >
+            Start kviz
+          </button>
 
-        <button
-          className="secondary-button"
-          onClick={() => setScreen("create-player")}
-        >
-          Kreiraj novog igrača
-        </button>
+          <button
+            className="secondary-button"
+            onClick={() => setScreen("create-player")}
+          >
+            Kreiraj novog igrača
+          </button>
 
-        <button
-          className="secondary-button"
-          onClick={() => setScreen("leaderboard")}
-        >
-          Ljestvica
-        </button>
+          <button
+            className="secondary-button"
+            onClick={() => setScreen("leaderboard")}
+          >
+            Ljestvica
+          </button>
+
+          <button
+            className="secondary-button"
+            onClick={() => setScreen("delete-player")}
+          >
+            Obriši igrače
+          </button>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   if (screen === "players") {
-  return (
-    <div className="app">
-      <div className="quiz-card">
-        <h1>Start kviz</h1>
+    return (
+      <div className="app">
+        <div className="quiz-card">
+          <h1>Start kviz</h1>
 
-        <h2>Odaberi igrača</h2>
+          <h2>Odaberi igrača</h2>
 
-        {players.length === 0 ? (
-          <p>Nema registriranih igrača.</p>
-        ) : (
-          <div className="players">
-            {players.map((player) => (
-              <button
-                key={player.id}
-                className="player-button"
-                onClick={() => startQuiz(player)}
-              >
-                {player.username}
-              </button>
-            ))}
-          </div>
-        )}
+          {players.length === 0 ? (
+            <p>Nema registriranih igrača.</p>
+          ) : (
+            <div className="players">
+              {players.map((player) => (
+                <button
+                  key={player.id}
+                  className="player-button"
+                  onClick={() => startQuiz(player)}
+                >
+                  {player.username}
+                </button>
+              ))}
+            </div>
+          )}
 
-        <button
-          className="secondary-button"
-          onClick={() => setScreen("home")}
-        >
-          Natrag
-        </button>
+          <button
+            className="secondary-button"
+            onClick={() => setScreen("home")}
+          >
+            Natrag
+          </button>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
+
+  if (screen === "create-player") {
+    return (
+      <div className="app">
+        <div className="quiz-card">
+          <h1>Kreiraj novog igrača</h1>
+
+          <input
+            type="text"
+            className="player-input"
+            placeholder="Unesi korisničko ime"
+            value={newPlayerName}
+            onChange={(event) => setNewPlayerName(event.target.value)}
+          />
+
+          <button
+            className="next-button"
+            onClick={createPlayer}
+          >
+            Kreiraj igrača
+          </button>
+
+          <button
+            className="secondary-button"
+            onClick={() => setScreen("home")}
+          >
+            Natrag
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === "delete-player") {
+    return (
+      <div className="app">
+        <div className="quiz-card">
+          <h1>Obriši igrače</h1>
+
+          {players.length === 0 ? (
+            <p>Nema registriranih igrača.</p>
+          ) : (
+            <div className="players">
+              {players.map((player) => (
+                <label key={player.id}>
+                  <input
+                    type="checkbox"
+                    checked={junkPlayers.includes(player.id)}
+                    onChange={() => {
+                      setJunkPlayers((previousPlayers) => {
+                        if (previousPlayers.includes(player.id)) {
+                          return previousPlayers.filter(
+                            (id) => id !== player.id
+                          );
+                        }
+
+                        return [...previousPlayers, player.id];
+                      });
+                    }}
+                  />
+                  {" "}{player.username}
+                </label>
+              ))}
+            </div>
+          )}
+
+          <button
+            className="next-button"
+            onClick={async () => {
+              if (junkPlayers.length === 0) {
+                return;
+              }
+
+              try {
+                const response = await fetch(
+                  "http://localhost:8080/players",
+                  {
+                    method: "DELETE",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      player_ids: junkPlayers,
+                    }),
+                  }
+                );
+
+                if (!response.ok) {
+                  throw new Error();
+                }
+
+                setPlayers((previousPlayers) =>
+                  previousPlayers.filter(
+                    (player) => !junkPlayers.includes(player.id)
+                  )
+                );
+
+                setJunkPlayers([]);
+                setScreen("home");
+              } catch {
+                setError("Nije moguće obrisati igrače.");
+              }
+            }}
+          >
+            Obriši odabrane ({junkPlayers.length})
+          </button>
+
+          <button
+            className="secondary-button"
+            onClick={() => setScreen("home")}
+          >
+            Natrag
+          </button>
+        </div>
+      </div>
+    );
+  }
   if (loadingQuestions) {
     return (
       <div className="app">
@@ -282,7 +445,7 @@ function App() {
             className="secondary-button"
             onClick={() => {
               setSelectedPlayer(null);
-              setScreen("home");
+              setScreen("players");
             }}
           >
             Promijeni igrača
