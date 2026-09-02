@@ -32,6 +32,22 @@ def get_questions(db: Session = Depends(get_db)):
 
   return result
 
+@router.delete("/player/{player_id}/reset")
+def reset_player_answers(
+    player_id: int,
+    db: Session = Depends(get_db)
+):
+    deleted_answers = db.query(PlayerAnswer).filter(
+        PlayerAnswer.player_id == player_id
+    ).delete(synchronize_session=False)
+
+    db.commit()
+
+    return {
+        "message": "Player answers reset successfully",
+        "player_id": player_id,
+        "deleted_answers": deleted_answers
+    }
 
 @router.get("/{question_id}", response_model=QuestionResponse)
 def get_question(question_id: int, db: Session = Depends(get_db)):

@@ -70,3 +70,27 @@ def get_leaderboard(db: Session = Depends(get_db)):
             continue
 
     return leaderboard
+
+@router.delete("/{player_id}")
+def reset_score(
+    player_id: int,
+    db: Session = Depends(get_db)
+):
+    score = db.query(Score).filter(
+        Score.player_id == player_id
+    ).first()
+
+    if not score:
+        return {
+            "message": "Score not found"
+        }
+
+    score.points = 0
+
+    db.commit()
+
+    return {
+        "message": "Score reset successfully",
+        "player_id": player_id,
+        "points": 0
+    }

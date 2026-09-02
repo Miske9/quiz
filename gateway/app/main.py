@@ -1,9 +1,18 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
 
 app = FastAPI(
     title="Quiz API Gateway"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 QUIZ_SERVICE_URL = "http://quiz-service:8000"
@@ -20,6 +29,15 @@ class PlayerCreate(BaseModel):
 class ScoreCreate(BaseModel):
     player_id: int
     points: int
+
+class AnswerCreate(BaseModel):
+    answer: str
+    is_correct: bool
+
+
+class QuestionCreate(BaseModel):
+    question: str
+    answers: list[AnswerCreate]
 
 @app.get("/")
 def root():
@@ -49,6 +67,27 @@ def get_questions():
             detail="Quiz service unavailable"
         )
         
+@app.post("/questions")
+def create_question(question_data: QuestionCreate):
+    try:
+        response = httpx.post(
+            f"{QUIZ_SERVICE_URL}/questions/",
+            json=question_data.model_dump()
+        )
+
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail="Quiz service error"
+            )
+
+        return response.json()
+
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=503,
+            detail="Quiz service unavailable"
+        )
 
 @app.post("/questions/{question_id}/answer") 
 def submit_answer(
@@ -195,4 +234,40 @@ def create_score(score_data: ScoreCreate):
         raise HTTPException(
             status_code=503,
             detail="Score service unavailable"
+        )
+        
+@app.delete("/players/{player_id}/reset")
+def reset_player(player_id: int):
+    try:
+        quiz_response = httpx.delete(
+            f"{QUIZ_SERVICE_URL}/questions/player/{player_id}/reset",
+            timeout=5.0
+        )
+
+        if quiz_response.status_code != 200:
+            raise HTTPException(
+                status_code=quiz_response.status_code,
+                detail="Quiz reset error"
+            )
+
+        score_response = httpx.delete(
+            f"{SCORE_SERVICE_URL}/scores/{player_id}",
+            timeout=5.0
+        )
+
+        if score_response.status_code != 200:
+            raise HTTPException(
+                status_code=score_response.status_code,
+                detail="Score reset error"
+            )
+
+        return {
+            "message": "Player reset successfully",
+            "player_id": player_id
+        }
+
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=503,
+            detail="Service unavailable"
         )
