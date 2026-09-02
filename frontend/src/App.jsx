@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 function App() {
+  const [screen, setScreen] = useState("home");
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -36,6 +37,7 @@ function App() {
   setSelectedPlayer(player);
   setLoadingQuestions(true);
   setError("");
+  setScreen("quiz");
 
   const resetSuccessful = await resetPlayer(player.id);
 
@@ -164,34 +166,71 @@ function App() {
     );
   }
 
-  if (!selectedPlayer) {
-    return (
-      <div className="app">
-        <div className="quiz-card">
-          <h1>Quiz</h1>
+  if (screen === "home") {
+  return (
+    <div className="app">
+      <div className="quiz-card">
+        <h1>Quiz</h1>
 
-          <h2>Odaberi igrača</h2>
+        <button
+          className="next-button"
+          onClick={() => setScreen("players")}
+        >
+          Start kviz
+        </button>
 
-          {players.length === 0 ? (
-            <p>Nema registriranih igrača.</p>
-          ) : (
-            <div className="players">
-              {players.map((player) => (
-                <button
-                  key={player.id}
-                  className="player-button"
-                  onClick={() => startQuiz(player)}
-                >
-                  {player.username}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <button
+          className="secondary-button"
+          onClick={() => setScreen("create-player")}
+        >
+          Kreiraj novog igrača
+        </button>
+
+        <button
+          className="secondary-button"
+          onClick={() => setScreen("leaderboard")}
+        >
+          Ljestvica
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
+  if (screen === "players") {
+  return (
+    <div className="app">
+      <div className="quiz-card">
+        <h1>Start kviz</h1>
+
+        <h2>Odaberi igrača</h2>
+
+        {players.length === 0 ? (
+          <p>Nema registriranih igrača.</p>
+        ) : (
+          <div className="players">
+            {players.map((player) => (
+              <button
+                key={player.id}
+                className="player-button"
+                onClick={() => startQuiz(player)}
+              >
+                {player.username}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <button
+          className="secondary-button"
+          onClick={() => setScreen("home")}
+        >
+          Natrag
+        </button>
+      </div>
+    </div>
+  );
+}
   if (loadingQuestions) {
     return (
       <div className="app">
@@ -243,7 +282,7 @@ function App() {
             className="secondary-button"
             onClick={() => {
               setSelectedPlayer(null);
-              restartQuiz();
+              setScreen("home");
             }}
           >
             Promijeni igrača
