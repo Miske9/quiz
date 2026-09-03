@@ -33,7 +33,7 @@ def get_player(player_id: int, db: Session = Depends(get_db)):
 def create_player(
     player_data: PlayerCreate,
     db: Session = Depends(get_db)
-):
+    ):
     player = Player(
         username=player_data.username
     )
@@ -48,7 +48,7 @@ def create_player(
 def delete_players(
     player_ids: list[int],
     db: Session = Depends(get_db)
-):
+    ):
     deleted_players = db.query(Player).filter(
         Player.id.in_(player_ids)
     ).delete(synchronize_session=False)

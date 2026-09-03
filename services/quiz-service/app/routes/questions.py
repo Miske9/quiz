@@ -60,7 +60,7 @@ def get_questions(
 def reset_player_answers(
     player_id: int,
     db: Session = Depends(get_db)
-):
+    ):
     deleted_answers = db.query(PlayerAnswer).filter(
         PlayerAnswer.player_id == player_id
     ).delete(synchronize_session=False)
@@ -90,7 +90,7 @@ def get_question(question_id: int, db: Session = Depends(get_db)):
 def create_question(
     question_data: QuestionCreate,
     db: Session = Depends(get_db)
-):
+    ):
     question = Question(
         question=question_data.question
     )
@@ -115,7 +115,7 @@ def submit_answer(
     question_id: int,
     answer_data: AnswerSubmit,
     db: Session = Depends(get_db)
-):
+    ):
     question = db.query(Question).filter(
         Question.id == question_id
     ).first()
@@ -205,7 +205,7 @@ def update_question(
     question_id: int,
     question_data: QuestionCreate,
     db: Session = Depends(get_db)
-):
+    ):
     question = db.query(Question).filter(
         Question.id == question_id
     ).first()
@@ -238,7 +238,7 @@ def update_question(
 def delete_question(
     question_id: int,
     db: Session = Depends(get_db)
-):
+    ):
     question = db.query(Question).filter(
         Question.id == question_id
     ).first()

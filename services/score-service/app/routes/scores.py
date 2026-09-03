@@ -16,7 +16,7 @@ router = APIRouter(
 def create_score(
     score_data: ScoreCreate,
     db: Session = Depends(get_db)
-):
+    ):
     score = db.query(Score).filter(
         Score.player_id == score_data.player_id
     ).first()
@@ -75,7 +75,7 @@ def get_leaderboard(db: Session = Depends(get_db)):
 def reset_score(
     player_id: int,
     db: Session = Depends(get_db)
-):
+    ):
     score = db.query(Score).filter(
         Score.player_id == player_id
     ).first()
